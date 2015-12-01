@@ -1,48 +1,72 @@
-/*
- * car.c
- *
- * Created: 11/18/2015 4:00:05 PM
- * Author : David
- */ 
-
-#include <avr/io.h>
+#include <avr/io.h>	
 #include "scheduler.h"
 
-enum direction{none, right, left, up, down, up_right, up_left, down_right, down_left};
+int position_lr = 0;
+
+void left_turn()
+{
+	PORTA = 0x05;
 	
+	if(position_lr < 2)
+	{
+		PORTB = 0x03;
+		position_lr++;
+	}
+	else
+	{		
+		PORTB = 0x05;
+	}
+}
+
+enum direction{none, up, down, left, right, up_right, up_left, down_right, down_left};
+
 int drive(int state)
 {
-	switch(state)	
+	switch(state)
 	{
 		case -1:
 			state = none;
 			break;
-			
+		
 		case none:
-			state = up;
+			state = left;
 			break;
-			
+		
 		case up:
 			state = down;
 			break;
-			
+		
 		case down:
-			state = none;
+			state = left;
 			break;
+			
+		case left:
+			state = left;
+			break;
+			
+		//case right:
+		//	state = none;
+		//	break;
+		
+		default:
+			state = none;
 	}
-	
 	switch(state)
 	{
 		case none:
-			PORTA = PORTB = 00;
+			PORTA = PORTB = 0x01;	//001
 			break;
 		
 		case up:
-			PORTA = PORTB = 01;
+			PORTA = PORTB = 0x05;	//101
 			break;
 		
 		case down:
-			PORTA = PORTB = 10;
+			PORTA = PORTB = 0x03;	//011
+			break;
+			
+		case left:
+			left_turn();
 			break;
 	}
 	
@@ -53,22 +77,19 @@ int main(void)
 {
 	PORTA = PORTB = 0x00;
 	DDRA = DDRB = 0xFF;
-
+	
 	tasksNum = 1;
 	task function[1];
 	tasks = function;
 	
-	tasks[1].state = 1;
-	tasks[1].period = 50;
-	tasks[1].elapsedTime = tasks[1].period;
-	tasks[1].TickFct = &drive;
+	tasks[0].state = -1;
+	tasks[0].period = 500;
+	tasks[0].elapsedTime = tasks[0].period;
+	tasks[0].TickFct = &drive;
 	
 	TimerSet(1);
 	TimerOn();
-
-    /* Replace with your application code */
-    while (1) 
-    {
-    }
+	/* Replace with your application code */
+	while (1)
+	{}
 }
-
